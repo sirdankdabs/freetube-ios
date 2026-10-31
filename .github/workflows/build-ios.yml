@@ -1,0 +1,91 @@
+name: Build iOS
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'ios/**'
+      - 'src/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/build-ios.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-ios
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install tools
+        run: |
+          brew install xcodegen
+          pnpm install --frozen-lockfile
+
+      - name: Build IPA
+        run: ./ios/build.sh
+
+      - name: Generate AltStore/Feather source
+        env:
+          REPO: ${{ github.repository }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          SIZE="$(stat -f%z ios/build/FreeTube.ipa)"
+          DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          BASE="https://github.com/$REPO/releases/download/latest"
+          cp _icons/iconColor.png ios/build/icon.png
+          cat > ios/build/source.json <<EOF
+          {
+            "name": "FreeTube iOS",
+            "identifier": "io.freetubeapp.source",
+            "apps": [
+              {
+                "name": "FreeTube",
+                "bundleIdentifier": "io.freetubeapp.freetube",
+                "developerName": "FreeTube",
+                "subtitle": "Private YouTube player",
+                "localizedDescription": "FreeTube for iOS: watch YouTube with privacy, no ads and no tracking.",
+                "iconURL": "$BASE/icon.png",
+                "version": "$VERSION",
+                "versionDate": "$DATE",
+                "downloadURL": "$BASE/FreeTube.ipa",
+                "size": $SIZE,
+                "versions": [
+                  {
+                    "version": "$VERSION",
+                    "buildVersion": "$RUN_NUMBER",
+                    "date": "$DATE",
+                    "downloadURL": "$BASE/FreeTube.ipa",
+                    "size": $SIZE,
+                    "minOSVersion": "26.0"
+                  }
+                ]
+              }
+            ]
+          }
+          EOF
+          node -e "JSON.parse(require('fs').readFileSync('ios/build/source.json','utf8'))"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete latest --yes --cleanup-tag || true
+          gh release create latest ios/build/FreeTube.ipa ios/build/source.json ios/build/icon.png \
+            --title "FreeTube iOS (latest)" \
+            --notes "Build ${{ github.run_number }} from ${{ github.sha }}"
