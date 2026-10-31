@@ -39,14 +39,17 @@ jobs:
           pnpm install --frozen-lockfile
 
       - name: Build IPA
-        run: ./ios/build.sh
+        run: |
+          # the version goes up with every build, so Feather offers it as an update
+          export FREETUBE_VERSION="$(node -p "require('./package.json').version").${{ github.run_number }}"
+          ./ios/build.sh
 
       - name: Generate AltStore/Feather source
         env:
           REPO: ${{ github.repository }}
           RUN_NUMBER: ${{ github.run_number }}
         run: |
-          VERSION="$(node -p "require('./package.json').version")"
+          VERSION="$(node -p "require('./package.json').version").$RUN_NUMBER"
           SIZE="$(stat -f%z ios/build/FreeTube.ipa)"
           DATE="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           BASE="https://github.com/$REPO/releases/download/latest"

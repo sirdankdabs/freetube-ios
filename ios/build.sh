@@ -18,7 +18,7 @@ cp -R "$ROOT/dist/ios" "$IOS_DIR/Generated/web"
 cp "$ROOT/dist/botGuardScript.js" "$IOS_DIR/Generated/botGuardScript.js"
 
 cd "$IOS_DIR"
-FREETUBE_VERSION="$(node -p "require('$ROOT/package.json').version")" xcodegen generate --quiet
+FREETUBE_VERSION="${FREETUBE_VERSION:-$(node -p "require('$ROOT/package.json').version")}" xcodegen generate --quiet
 
 if [ "$MODE" = "simulator" ]; then
   xcodebuild -project FreeTube.xcodeproj -scheme FreeTube -configuration Release \
