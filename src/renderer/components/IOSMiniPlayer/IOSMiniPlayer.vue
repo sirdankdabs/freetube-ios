@@ -63,6 +63,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import {
   getIOSMiniPlayerTime,
+  handoffIOSMiniPlayer,
   iosMiniPlayerHost,
   iosMiniPlayerState,
   stopIOSMiniPlayer,
@@ -89,7 +90,7 @@ watch(() => iosMiniPlayerState.active, (active) => {
 
 // opening any video replaces the one in the mini player
 watch(() => route.path, (path) => {
-  if (iosMiniPlayerState.active && path.startsWith('/watch/')) {
+  if (iosMiniPlayerState.active && !iosMiniPlayerState.handoff && path.startsWith('/watch/')) {
     stopIOSMiniPlayer()
   }
 })
@@ -98,7 +99,7 @@ async function expand() {
   const videoId = iosMiniPlayerState.videoId
   const time = Math.floor(getIOSMiniPlayerTime())
 
-  await stopIOSMiniPlayer()
+  handoffIOSMiniPlayer()
 
   router.push({
     path: `/watch/${videoId}`,

@@ -15,6 +15,7 @@ final class WebViewController: UIViewController {
   /// The style of the FreeTube theme, for the native screens presented over the web app
   private var themeInterfaceStyle: UIUserInterfaceStyle = .unspecified
   private var pendingDownloadDestinations: [ObjectIdentifier: URL] = [:]
+  private let refreshControl = UIRefreshControl()
   private var canGoBackObservation: NSKeyValueObservation?
   private var scrollObservation: NSKeyValueObservation?
   private var downloadsScrollObservation: NSKeyValueObservation?
@@ -138,6 +139,7 @@ final class WebViewController: UIViewController {
     contentController.add(WeakMessageHandler(self), name: "ftTheme")
     contentController.add(WeakMessageHandler(self), name: "ftNav")
     contentController.add(WeakMessageHandler(self), name: "ftResumePlayback")
+    contentController.add(WeakMessageHandler(self), name: "ftRoute")
 
     webView = WKWebView(frame: .zero, configuration: configuration)
     webView.customUserAgent = NetworkProxy.userAgent
@@ -151,7 +153,6 @@ final class WebViewController: UIViewController {
     webView.scrollView.contentInsetAdjustmentBehavior = .never
     webView.scrollView.keyboardDismissMode = .interactive
     // Pull down at the top: refreshes the feed, or leaves the video (it keeps playing in the mini player)
-    let refreshControl = UIRefreshControl()
     refreshControl.addTarget(self, action: #selector(pullToRefresh(_:)), for: .valueChanged)
     webView.scrollView.refreshControl = refreshControl
     #if DEBUG
@@ -265,14 +266,7 @@ final class WebViewController: UIViewController {
 
   @objc private func pullToRefresh(_ sender: UIRefreshControl) {
     Task { @MainActor in
-      let onWatchPage = (try? await webView.evaluateJavaScript("location.hash.startsWith('#/watch/')")) as? Bool ?? false
-      if onWatchPage {
-        if webView.canGoBack {
-          webView.goBack()
-        }
-      } else {
-        _ = try? await webView.evaluateJavaScript("document.querySelector('.floatingRefreshSection .refreshButton:not([disabled])')?.click()")
-      }
+      _ = try? await webView.evaluateJavaScript("document.querySelector('.floatingRefreshSection .refreshButton:not([disabled])')?.click()")
       try? await Task.sleep(for: .milliseconds(700))
       sender.endRefreshing()
     }
@@ -503,6 +497,9 @@ extension WebViewController: WKScriptMessageHandler {
     switch message.name {
     case "ftResumePlayback":
       BackgroundPlayback.resume(webView)
+    case "ftRoute":
+      // the watch page has its own pull down gesture (Bootstrap.js), so no pull to refresh there
+      webView.scrollView.refreshControl = json == "watch" ? nil : refreshControl
     case "ftTheme":
       applyThemeColors(json)
     case "ftNav":

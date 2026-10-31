@@ -1612,3 +1612,9 @@ html[data-ios-bar-minimized] .iosMiniPlayer {
   background: var(--primary-color);
   transform-origin: left center;
 }
+
+/* the mini player is hidden (but keeps playing) while its video is handed over to the watch page */
+.iosMiniPlayerHandoff .iosMiniPlayer {
+  opacity: 0;
+  pointer-events: none;
+}

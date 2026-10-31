@@ -11,6 +11,7 @@ export const iosMiniPlayerState = reactive({
   channelName: '',
   thumbnail: '',
   playing: false,
+  handoff: false,
   progress: 0
 })
 
@@ -53,7 +54,7 @@ export function startIOSMiniPlayer(handle, info) {
   video.addEventListener('play', updatePlaying)
   video.addEventListener('pause', updatePlaying)
   video.addEventListener('timeupdate', updateProgress)
-  video.addEventListener('ended', stopIOSMiniPlayer)
+  video.addEventListener('ended', updatePlaying)
 
   current = {
     ...handle,
@@ -61,7 +62,7 @@ export function startIOSMiniPlayer(handle, info) {
       video.removeEventListener('play', updatePlaying)
       video.removeEventListener('pause', updatePlaying)
       video.removeEventListener('timeupdate', updateProgress)
-      video.removeEventListener('ended', stopIOSMiniPlayer)
+      video.removeEventListener('ended', updatePlaying)
     }
   }
 
@@ -94,6 +95,44 @@ export function startIOSMiniPlayer(handle, info) {
   }
 
   setTimeout(() => video.removeEventListener('pause', resumeOnPause), 1000)
+}
+
+/**
+ * Called when the mini player is expanded into the watch page: the video keeps playing (hidden) while the watch page
+ * loads the same video, and is stopped as soon as the new player starts, so the sound isn't interrupted.
+ */
+export function handoffIOSMiniPlayer() {
+  const video = current?.video
+
+  if (!video) {
+    return
+  }
+
+  const finish = (event) => {
+    const target = event?.target
+
+    if (event && (!(target instanceof HTMLVideoElement) || target === video)) {
+      return
+    }
+
+    document.removeEventListener('playing', finish, true)
+    clearTimeout(timeoutId)
+
+    if (event && target.currentTime < video.currentTime && video.currentTime - target.currentTime < 30) {
+      // the sound of the mini player went on while the watch page was loading
+      target.currentTime = video.currentTime
+    }
+
+    iosMiniPlayerState.handoff = false
+    document.body.classList.remove('iosMiniPlayerHandoff')
+    stopIOSMiniPlayer()
+  }
+
+  const timeoutId = setTimeout(() => finish(null), 15000)
+
+  iosMiniPlayerState.handoff = true
+  document.body.classList.add('iosMiniPlayerHandoff')
+  document.addEventListener('playing', finish, true)
 }
 
 export function toggleIOSMiniPlayer() {

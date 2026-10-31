@@ -230,12 +230,7 @@
       }
       switch (event) {
         case 'willResignActive':
-          // picture in picture when leaving the app while the video plays
-          if (!activeMedia.paused && !activeMedia.ended && !document.pictureInPictureElement) {
-            try {
-              activeMedia.webkitSetPresentationMode?.('picture-in-picture')
-            } catch {}
-          }
+          enterPictureInPicture(0)
           break
         case 'didEnterBackground':
           appInBackground = true
@@ -287,11 +282,7 @@
       userPaused = true
       activeMedia?.pause()
     })
-    setHandler('enterpictureinpicture', () => {
-      try {
-        activeMedia?.webkitSetPresentationMode?.('picture-in-picture')
-      } catch {}
-    })
+    setHandler('enterpictureinpicture', () => enterPictureInPicture(0))
     setHandler('seekbackward', (details) => {
       if (activeMedia) {
         activeMedia.currentTime = Math.max(0, activeMedia.currentTime - (details.seekOffset ?? 10))
@@ -309,7 +300,159 @@
     })
   }
 
+  // picture in picture when leaving the app while the video plays
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      enterPictureInPicture(0)
+    }
+  })
+
+  /** @param {number} attempt */
+  function enterPictureInPicture(attempt) {
+    const playing = [...document.querySelectorAll('video')].filter(video => !video.paused && !video.ended && video.readyState > 1)
+    const media = playing.includes(activeMedia) ? activeMedia : playing[0]
+
+    if (!media || media.webkitPresentationMode === 'picture-in-picture') {
+      return
+    }
+
+    media.disablePictureInPicture = false
+    media.removeAttribute('disablepictureinpicture')
+
+    try {
+      if (media.webkitSupportsPresentationMode?.('picture-in-picture')) {
+        media.webkitSetPresentationMode('picture-in-picture')
+      } else {
+        media.requestPictureInPicture?.().catch(() => {})
+      }
+    } catch {}
+
+    // WebKit sometimes ignores the first request while the app is changing state, so insist a few times
+    if (attempt < 4) {
+      setTimeout(() => enterPictureInPicture(attempt + 1), 150 * (attempt + 1))
+    }
+  }
+
   // #endregion background playback
+
+  // #region pull down to leave the watch page
+
+  // Dragging down at the top of the watch page moves the page with the finger, like YouTube's app.
+  // Letting go far enough goes back (the video keeps playing in the mini player), otherwise the page springs back.
+  const isWatchPage = () => location.hash.startsWith('#/watch/')
+  const postRoute = () => window.webkit.messageHandlers.ftRoute.postMessage(isWatchPage() ? 'watch' : 'other')
+  window.addEventListener('hashchange', postRoute)
+  document.addEventListener('DOMContentLoaded', postRoute)
+
+  let dragStartX = 0
+  let dragStartY = 0
+  let dragLastY = 0
+  let dragLastTime = 0
+  let dragVelocity = 0
+  let dragArmed = false
+  let dragging = false
+  let dragDistance = 0
+
+  const blockedSelector = 'input, textarea, .shaka-range-element, .shaka-seek-bar-container, .shaka-overflow-menu, .fullWindow, .iosMiniVideo, .iosMiniPlayer'
+
+  /** @param {EventTarget | null} target */
+  function canStartDrag(target) {
+    if (!isWatchPage() || window.scrollY > 0 || document.fullscreenElement || !(target instanceof Element)) {
+      return false
+    }
+    if (target.closest(blockedSelector)) {
+      return false
+    }
+    // something inside the page is scrolled
+    for (let element = target; element && element !== document.body; element = element.parentElement) {
+      if (element.scrollTop > 0) {
+        return false
+      }
+    }
+    return true
+  }
+
+  const pageElement = () => document.getElementById('app')
+
+  function setDrag(distance, animated) {
+    const page = pageElement()
+    if (!page) {
+      return
+    }
+    const progress = Math.min(1, distance / 600)
+    page.style.transition = animated ? 'transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.25s' : 'none'
+    page.style.transform = distance > 0 ? `translateY(${distance}px) scale(${1 - progress * 0.06})` : ''
+    page.style.transformOrigin = 'center top'
+    page.style.borderRadius = distance > 0 ? '24px' : ''
+    page.style.opacity = distance > 0 ? String(1 - progress * 0.3) : ''
+    page.style.overflow = distance > 0 ? 'hidden' : ''
+  }
+
+  document.addEventListener('touchstart', (event) => {
+    dragArmed = event.touches.length === 1 && canStartDrag(event.target)
+    dragging = false
+    dragDistance = 0
+    dragVelocity = 0
+    if (dragArmed) {
+      dragStartX = event.touches[0].clientX
+      dragStartY = dragLastY = event.touches[0].clientY
+      dragLastTime = performance.now()
+    }
+  }, { capture: true, passive: true })
+
+  document.addEventListener('touchmove', (event) => {
+    if (!dragArmed) {
+      return
+    }
+    const touch = event.touches[0]
+    const dy = touch.clientY - dragStartY
+    const dx = touch.clientX - dragStartX
+
+    if (!dragging) {
+      if (dy < -6 || Math.abs(dx) > 12 && Math.abs(dx) > dy) {
+        dragArmed = false
+        return
+      }
+      if (dy > 10 && dy > Math.abs(dx) * 1.5) {
+        dragging = true
+      } else {
+        return
+      }
+    }
+
+    event.preventDefault()
+    const now = performance.now()
+    dragVelocity = (touch.clientY - dragLastY) / Math.max(1, now - dragLastTime)
+    dragLastY = touch.clientY
+    dragLastTime = now
+    dragDistance = Math.max(0, dy - 10)
+    setDrag(dragDistance, false)
+  }, { capture: true, passive: false })
+
+  const endDrag = (cancelled) => {
+    if (!dragging) {
+      dragArmed = false
+      return
+    }
+    dragArmed = false
+    dragging = false
+
+    if (!cancelled && (dragDistance > 140 || dragVelocity > 0.7) && history.length > 1) {
+      setDrag(window.innerHeight, true)
+      setTimeout(() => {
+        history.back()
+        setTimeout(() => setDrag(0, false), 150)
+      }, 220)
+    } else {
+      setDrag(0, true)
+      setTimeout(() => setDrag(0, false), 300)
+    }
+  }
+
+  document.addEventListener('touchend', () => endDrag(false), { capture: true, passive: true })
+  document.addEventListener('touchcancel', () => endDrag(true), { capture: true, passive: true })
+
+  // #endregion pull down to leave the watch page
 
   // #region native bridge
 
