@@ -1,0 +1,100 @@
+.radio {
+  border: 0;
+  clip-path: circle(0);
+  block-size: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  inline-size: 1px;
+}
+
+.label {
+  position: relative;
+  padding-inline-start: 2em;
+  user-select: none;
+  cursor: pointer;
+  display: block;
+  margin-block-start: 10px;
+}
+
+.label::before,
+.label::after {
+  border-radius: 50%;
+  box-sizing: content-box;
+  content: '';
+  position: absolute;
+  inset-block-start: 50%;
+}
+
+.label::before {
+  color: var(--primary-text-color);
+  inset-inline-start: 0;
+  inline-size: 14px;
+  block-size: 14px;
+  margin-block-start: -9px;
+  border: 2px solid var(--primary-text-color);
+  text-align: center;
+  transition: all 0.4s ease;
+}
+
+.label::after {
+  background-color: var(--primary-text-color);
+  inset-inline-start: 4px;
+  inline-size: 10px;
+  block-size: 10px;
+  margin-block-start: -5px;
+  transform: scale(0);
+  transform-origin: 50%;
+  transition: transform 200ms ease-out;
+}
+
+.radio:focus + .label::before,
+.radio:hover + .label::before {
+  border: 2px solid var(--primary-color);
+}
+
+.radio:active + .label::before {
+  transition-duration: 0s;
+}
+
+.radio:disabled + .label::before {
+  border-color: #ccc;
+}
+
+.radio:checked + .label::before {
+  animation: borderscale 300ms ease-in;
+}
+
+.radio:disabled:focus + .label::before,
+.radio:disabled:hover + .label::before {
+  background-color: inherit;
+}
+
+.radio:disabled:checked + .label::before {
+  background-color: #ccc;
+}
+
+.radio:focus + .label::after {
+  background-color: var(--primary-color);
+}
+
+.radio:checked + .label::after {
+  transform: scale(1);
+}
+
+@keyframes borderscale {
+  50% {
+    box-shadow: 0 0 0 2px var(--primary-text-color);
+  }
+}
+
+.radioTitle {
+  margin-block: 0;
+}
+
+@media only screen and (width <= 680px) {
+  .label {
+    margin-block-start: 3px;
+  }
+}

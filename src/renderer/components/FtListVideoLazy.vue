@@ -1,0 +1,216 @@
+<template>
+  <div
+    v-observe-visibility="visible ? false : {
+      callback: onVisibilityChanged
+    }"
+    :style="{ display }"
+  >
+    <FtListVideo
+      v-if="visible"
+      :data="data"
+      :playlist-id="playlistId"
+      :playlist-type="playlistType"
+      :playlist-index="playlistIndex"
+      :playlist-reverse="playlistReverse"
+      :playlist-shuffle="playlistShuffle"
+      :playlist-loop="playlistLoop"
+      :playlist-item-id="playlistItemId"
+      :force-list-type="forceListType"
+      :appearance="appearance"
+      :always-show-add-to-playlist-button="alwaysShowAddToPlaylistButton"
+      :quick-bookmark-button-enabled="quickBookmarkButtonEnabled"
+      :can-move-video-up="canMoveVideoUp"
+      :can-move-video-down="canMoveVideoDown"
+      :can-remove-from-playlist="canRemoveFromPlaylist"
+      @move-video-to-the-top="moveVideoToTheTop"
+      @move-video-to-the-bottom="moveVideoToTheBottom"
+      @pause-player="pausePlayer"
+      @move-video-up="moveVideoUp"
+      @move-video-down="moveVideoDown"
+      @remove-from-playlist="removeFromPlaylist"
+    />
+  </div>
+</template>
+
+<script setup>
+import { computed, ref } from 'vue'
+import { ObserveVisibility as vObserveVisibility } from 'vue-observe-visibility'
+
+import FtListVideo from './FtListVideo/FtListVideo.vue'
+
+import store from '../store/index'
+
+const props = defineProps({
+  data: {
+    type: Object,
+    required: true
+  },
+  playlistId: {
+    type: String,
+    default: null
+  },
+  playlistType: {
+    type: String,
+    default: null
+  },
+  playlistIndex: {
+    type: Number,
+    default: null
+  },
+  playlistReverse: {
+    type: Boolean,
+    default: false
+  },
+  playlistShuffle: {
+    type: Boolean,
+    default: false
+  },
+  playlistLoop: {
+    type: Boolean,
+    default: false
+  },
+  playlistItemId: {
+    type: String,
+    default: null,
+  },
+  forceListType: {
+    type: String,
+    default: null
+  },
+  appearance: {
+    type: String,
+    required: true
+  },
+  initialVisibleState: {
+    type: Boolean,
+    default: false,
+  },
+  alwaysShowAddToPlaylistButton: {
+    type: Boolean,
+    default: false,
+  },
+  quickBookmarkButtonEnabled: {
+    type: Boolean,
+    default: true,
+  },
+  canMoveVideoUp: {
+    type: Boolean,
+    default: false,
+  },
+  canMoveVideoDown: {
+    type: Boolean,
+    default: false,
+  },
+  canRemoveFromPlaylist: {
+    type: Boolean,
+    default: false,
+  },
+  useChannelsHiddenPreference: {
+    type: Boolean,
+    default: false,
+  },
+  hideForbiddenTitles: {
+    type: Boolean,
+    default: true
+  }
+})
+
+const visible = ref(props.initialVisibleState)
+const display = ref('block')
+
+const channelsHidden = computed(() => {
+  // Some component users like channel view will have this disabled
+  if (!props.useChannelsHiddenPreference) { return [] }
+
+  return JSON.parse(store.getters.getChannelsHidden).map((ch) => {
+    // Legacy support
+    if (typeof ch === 'string') {
+      return { name: ch, preferredName: '', icon: '' }
+    }
+    return ch
+  })
+})
+
+const forbiddenTitles = computed(() => {
+  if (!props.hideForbiddenTitles) { return [] }
+  return JSON.parse(store.getters.getForbiddenTitles.toLowerCase())
+})
+
+const hideChannelsBasedOnText = computed(() => {
+  return store.getters.getHideChannelsBasedOnText
+})
+
+const shouldBeVisible = computed(() => {
+  const lowerCaseTitle = props.data.title?.toLowerCase()
+  const lowerCaseAuthor = props.data.author?.toLowerCase()
+
+  return !(channelsHidden.value.some(ch => ch.name === props.data.authorId || (props.data.collaborators?.length > 0 && ch.name === props.data.collaborators[0].id)) ||
+    channelsHidden.value.some(ch => ch.name === props.data.author) ||
+    (lowerCaseTitle && forbiddenTitles.value.some((text) => lowerCaseTitle.includes(text))) ||
+    (hideChannelsBasedOnText.value && lowerCaseAuthor && forbiddenTitles.value.some((text) => lowerCaseAuthor.includes(text))))
+})
+
+/**
+ * @param {boolean} isVisible
+ */
+function onVisibilityChanged(isVisible) {
+  if (isVisible && shouldBeVisible.value) {
+    visible.value = isVisible
+  } else if (isVisible) {
+    display.value = 'none'
+  }
+}
+
+const emit = defineEmits([
+  'pause-player',
+  'move-video-up',
+  'move-video-down',
+  'move-video-to-the-top',
+  'move-video-to-the-bottom',
+  'remove-from-playlist'
+])
+
+function pausePlayer() {
+  emit('pause-player')
+}
+
+/**
+ * @param {string} videoId
+ * @param {string} playlistItemId
+ */
+function moveVideoToTheTop(videoId, playlistItemId) {
+  emit('move-video-to-the-top', videoId, playlistItemId)
+}
+
+/**
+ * @param {string} videoId
+ * @param {string} playlistItemId
+ */
+function moveVideoToTheBottom(videoId, playlistItemId) {
+  emit('move-video-to-the-bottom', videoId, playlistItemId)
+}
+
+/**
+ * @param {string} videoId
+ * @param {string} playlistItemId
+ */
+function moveVideoUp(videoId, playlistItemId) {
+  emit('move-video-up', videoId, playlistItemId)
+}
+
+/**
+ * @param {string} videoId
+ * @param {string} playlistItemId
+ */
+function moveVideoDown(videoId, playlistItemId) {
+  emit('move-video-down', videoId, playlistItemId)
+}
+
+/**
+ * @param {string} videoId
+ * @param {string} playlistItemId
+ */
+function removeFromPlaylist(videoId, playlistItemId) {
+  emit('remove-from-playlist', videoId, playlistItemId)
+}
+</script>

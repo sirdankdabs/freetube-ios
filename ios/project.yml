@@ -1,0 +1,41 @@
+name: FreeTube
+options:
+  bundleIdPrefix: io.freetubeapp
+  deploymentTarget:
+    iOS: "26.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    MARKETING_VERSION: "${FREETUBE_VERSION}"
+    CURRENT_PROJECT_VERSION: "1"
+    SWIFT_VERSION: "5.0"
+    IPHONEOS_DEPLOYMENT_TARGET: "26.0"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    DEVELOPMENT_LANGUAGE: en
+targets:
+  FreeTube:
+    type: application
+    platform: iOS
+    sources:
+      - path: FreeTube
+        excludes:
+          - "*.js"
+      - path: FreeTube/Bootstrap.js
+        buildPhase: resources
+      - path: Generated/web
+        type: folder
+        buildPhase: resources
+      - path: Generated/botGuardScript.js
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: io.freetubeapp.freetube
+        PRODUCT_NAME: FreeTube
+        INFOPLIST_FILE: FreeTube/Info.plist
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS: NO
+        ENABLE_USER_SCRIPT_SANDBOXING: NO
+        CODE_SIGN_STYLE: Automatic
+        SUPPORTS_MACCATALYST: NO
+        SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD: NO
+        SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD: NO

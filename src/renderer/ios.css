@@ -1,0 +1,1614 @@
+/*
+  Only included in the iOS app (see src/renderer/main.js).
+  The top and side navigation are replaced by native Liquid Glass controls (ios/FreeTube/NativeChrome.swift),
+  the page is drawn edge to edge underneath them.
+  --ios-inset-top and --ios-inset-bottom are set by the native app to the space taken up by those controls.
+*/
+
+/*
+  This stylesheet restyles the components from the outside, so it has to reach into their structure
+  and override their own (sometimes more specific) rules.
+*/
+/* stylelint-disable selector-max-compound-selectors, no-descending-specificity */
+
+:root {
+  --ios-inset-top: env(safe-area-inset-top);
+  --ios-inset-bottom: env(safe-area-inset-bottom);
+  --ios-inset-left: env(safe-area-inset-left);
+  --ios-inset-right: env(safe-area-inset-right);
+
+  -webkit-tap-highlight-color: transparent;
+  text-size-adjust: 100%;
+  overscroll-behavior-x: none;
+
+  /* menus and dialogs, see below */
+  --ios-menu-bg: rgb(0 0 0 / 92%);
+  --ios-menu-solid-bg: #000;
+  --ios-menu-text: rgb(255 255 255 / 92%);
+  --ios-menu-secondary-text: rgb(235 235 245 / 60%);
+  --ios-menu-separator: rgb(255 255 255 / 10%);
+  --ios-menu-border: rgb(255 255 255 / 12%);
+  --ios-menu-pressed: rgb(255 255 255 / 10%);
+  --ios-menu-shadow: 0 18px 48px rgb(0 0 0 / 55%), 0 2px 8px rgb(0 0 0 / 35%);
+  --ios-backdrop: rgb(0 0 0 / 55%);
+
+  /* design system */
+  --ios-font: -apple-system, system-ui, 'SF Pro Text', 'Helvetica Neue', sans-serif;
+  --ios-display-font: -apple-system, system-ui, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  --ios-radius-panel: 28px;
+  --ios-radius-artwork: 16px;
+  --ios-radius-control: 999px;
+  --ios-panel-fill: linear-gradient(180deg, rgb(255 255 255 / 7%), rgb(255 255 255 / 3.5%));
+  --ios-panel-stroke: rgb(255 255 255 / 10%);
+  --ios-panel-highlight: inset 0 1px 0 rgb(255 255 255 / 8%);
+  --ios-control-fill: rgb(118 118 128 / 24%);
+  --ios-control-fill-pressed: rgb(118 118 128 / 36%);
+  --ios-secondary-label: rgb(235 235 245 / 60%);
+  --ios-tertiary-label: rgb(235 235 245 / 30%);
+}
+
+body {
+  -webkit-touch-callout: none;
+}
+
+.topNav,
+.sideNav {
+  display: none !important;
+}
+
+.app .routerView,
+.app .flexBox {
+  margin-inline: 0;
+}
+
+.app > .routerView {
+  box-sizing: border-box;
+  margin-block: 0;
+  padding-block: calc(var(--ios-inset-top) + 8px) calc(var(--ios-inset-bottom) + 12px);
+  padding-inline: calc(var(--ios-inset-left) + 8px) calc(var(--ios-inset-right) + 8px);
+  min-block-size: 100vh;
+}
+
+.routerView .routerView {
+  margin-block: 0;
+}
+
+/* The refresh bar of the subscriptions and channels pages becomes a glass pill between the native top buttons */
+.floatingRefreshSection,
+.floatingRefreshSection.sideNavOpen,
+.floatingRefreshSection.hideLabelsSideBar {
+  inset-block-start: calc(env(safe-area-inset-top) + 4px) !important;
+  inset-inline: 50% auto !important;
+  transform: translateX(calc(-50% * var(--horizontal-directionality-coefficient, 1)));
+  inline-size: max-content !important;
+  max-inline-size: calc(100% - var(--ios-inset-left) - var(--ios-inset-right) - 136px);
+  block-size: 44px;
+  padding-block: 0 !important;
+  padding-inline: 2px !important;
+  border: 0.5px solid rgb(255 255 255 / 40%) !important;
+  border-radius: 999px;
+  background-color: color-mix(in srgb, var(--card-bg-color) 62%, transparent) !important;
+  box-shadow:
+    0 6px 20px rgb(0 0 0 / 10%),
+    inset 0 1px 0 rgb(255 255 255 / 35%) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  gap: 6px;
+}
+
+.floatingRefreshSection .lastRefreshTimestamp {
+  margin-inline-start: 14px;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.75;
+}
+
+.floatingRefreshSection .refreshButton {
+  transform: scale(0.82);
+}
+
+/*
+  Playlist page: one column, the playlist details on top (not sticky, there is no room for that on a phone),
+  then the videos
+*/
+.playlistPage.routerView {
+  flex-direction: column !important;
+  gap: 16px;
+}
+
+.playlistPage .playlistInfoContainer {
+  position: static !important;
+  inset: auto !important;
+  inline-size: auto !important;
+  block-size: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0.5px solid var(--ios-panel-stroke);
+  border-radius: var(--ios-radius-panel);
+  background: var(--ios-panel-fill), var(--card-bg-color) !important;
+  box-shadow: var(--ios-panel-highlight) !important;
+  overflow: hidden;
+}
+
+.playlistPage .playlistInfoContainer .playlistInfo {
+  padding-block: 16px 20px !important;
+  padding-inline: 20px !important;
+}
+
+.playlistPage .playlistItemsCard {
+  inline-size: auto !important;
+  margin: 0 !important;
+}
+
+.playlistInfo .playlistThumbnail img {
+  display: block;
+  inline-size: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: var(--ios-radius-artwork);
+}
+
+/* Toasts float above the tab bar */
+.toast-holder {
+  inset-block-end: calc(var(--ios-inset-bottom) + 12px) !important;
+}
+
+.toast {
+  border-radius: 999px;
+  padding-block: 10px;
+  padding-inline: 18px;
+  background-color: rgb(30 30 30 / 72%);
+  backdrop-filter: blur(20px) saturate(180%);
+}
+
+
+/* The native back button returns to the settings menu (see chromeGoBack in WebViewController.swift) */
+.returnToMenuMobileButton {
+  display: none !important;
+}
+
+/* Dialogs stay clear of the notch, the Dynamic Island and the home indicator */
+.prompt {
+  padding-block: calc(env(safe-area-inset-top) + 12px) calc(env(safe-area-inset-bottom) + 12px) !important;
+  padding-inline: calc(env(safe-area-inset-left) + 12px) calc(env(safe-area-inset-right) + 12px) !important;
+  backdrop-filter: blur(6px);
+  background-color: var(--ios-backdrop) !important;
+  animation: ios-fade-in 0.18s ease-out;
+}
+
+.prompt .promptCard {
+  max-block-size: 100% !important;
+  border: 0.5px solid var(--ios-menu-border);
+  border-radius: 24px !important;
+  background-color: var(--ios-menu-solid-bg) !important;
+  color: var(--ios-menu-text);
+  box-shadow: var(--ios-menu-shadow) !important;
+  animation: ios-menu-in 0.2s ease-out;
+  transform-origin: center;
+  overscroll-behavior: contain;
+}
+
+/* The playlists in the "Add to playlist" dialog become compact rows on phones */
+@media only screen and (width <= 680px) {
+  .prompt .playlist-selector-container {
+    inline-size: 100%;
+  }
+
+  .prompt .ft-playlist-selector.grid {
+    flex-direction: row !important;
+    align-items: center;
+    gap: 12px;
+    inline-size: 100% !important;
+    min-block-size: 0 !important;
+    padding: 8px !important;
+    box-sizing: border-box;
+    border-radius: 14px;
+  }
+
+  .prompt .ft-playlist-selector.grid .thumbnail {
+    flex-shrink: 0;
+    inline-size: 128px;
+    margin-block-end: 0 !important;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .prompt .ft-playlist-selector .videoCountContainer {
+    inline-size: 40px !important;
+    font-size: 15px !important;
+  }
+
+  .prompt .ft-playlist-selector .selectedIcon {
+    inset-block-start: calc(50% - 16px) !important;
+    inset-inline-start: calc(50% - 16px) !important;
+    font-size: 32px !important;
+  }
+
+  .prompt .ft-playlist-selector.grid .title {
+    font-size: 17px !important;
+  }
+}
+
+/*
+  Menus and dialogs: pure black on dark themes, so that they blend into OLED screens, white on light themes.
+  data-ios-appearance is set by ios/FreeTube/Bootstrap.js.
+*/
+
+:root[data-ios-appearance='light'] {
+  --ios-menu-bg: rgb(255 255 255 / 92%);
+  --ios-menu-solid-bg: #fff;
+  --ios-menu-text: rgb(0 0 0 / 88%);
+  --ios-menu-secondary-text: rgb(60 60 67 / 60%);
+  --ios-menu-separator: rgb(60 60 67 / 14%);
+  --ios-menu-border: rgb(0 0 0 / 6%);
+  --ios-menu-pressed: rgb(0 0 0 / 6%);
+  --ios-menu-shadow: 0 18px 48px rgb(0 0 0 / 18%), 0 2px 8px rgb(0 0 0 / 8%);
+  --ios-backdrop: rgb(0 0 0 / 35%);
+  --ios-panel-fill: linear-gradient(180deg, rgb(255 255 255 / 92%), rgb(255 255 255 / 80%));
+  --ios-panel-stroke: rgb(0 0 0 / 6%);
+  --ios-panel-highlight: 0 1px 2px rgb(0 0 0 / 4%), 0 8px 24px rgb(0 0 0 / 6%);
+  --ios-control-fill: rgb(118 118 128 / 12%);
+  --ios-control-fill-pressed: rgb(118 118 128 / 22%);
+  --ios-secondary-label: rgb(60 60 67 / 60%);
+  --ios-tertiary-label: rgb(60 60 67 / 30%);
+}
+
+@keyframes ios-menu-in {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Dropdown menus (the "⋮" options of videos, channels and playlists, the player settings...) */
+.iconDropdown {
+  min-inline-size: 230px;
+  max-inline-size: min(320px, calc(100vw - 32px));
+  padding-block: 6px;
+  border: 0.5px solid var(--ios-menu-border);
+  border-radius: 16px;
+  background-color: var(--ios-menu-bg) !important;
+  color: var(--ios-menu-text) !important;
+  box-shadow: var(--ios-menu-shadow) !important;
+  backdrop-filter: blur(30px) saturate(160%);
+  font-size: 15px !important;
+  text-align: start !important;
+  overflow: hidden;
+  transform-origin: top right;
+  animation: ios-menu-in 0.16s ease-out;
+  z-index: 50 !important;
+}
+
+.iconDropdown.top {
+  transform-origin: bottom right;
+}
+
+.iconDropdown .listItem,
+.prompt .list .listItem {
+  padding-block: 11px !important;
+  padding-inline: 16px !important;
+  white-space: normal !important;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--ios-menu-text) !important;
+  background-color: transparent !important;
+  transition: background-color 0.12s ease-out !important;
+}
+
+.iconDropdown .listItem:active,
+.iconDropdown .listItem.pressed,
+.prompt .list .listItem:active {
+  background-color: var(--ios-menu-pressed) !important;
+}
+
+.iconDropdown .listItem.active,
+.prompt .list .listItem.active {
+  font-weight: 600;
+  color: var(--primary-color) !important;
+}
+
+.iconDropdown .listItemDivider,
+.prompt .list .listItemDivider {
+  inline-size: 100% !important;
+  margin-block: 5px !important;
+  border-block-start: 0.5px solid var(--ios-menu-separator) !important;
+  opacity: 1 !important;
+}
+
+/* Dialogs */
+
+@keyframes ios-fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+
+.prompt .promptCard .list {
+  margin: 0;
+  padding-block: 4px;
+  padding-inline: 0;
+  list-style: none;
+  text-align: start;
+}
+
+/* the share links and other dialogs that use cards inside the dialog */
+.prompt .promptCard .ft-card {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* The profile dropdown of the subscribe button */
+.profileDropdown {
+  border: 0.5px solid var(--ios-menu-border);
+  border-radius: 16px !important;
+  background-color: var(--ios-menu-solid-bg) !important;
+  box-shadow: var(--ios-menu-shadow) !important;
+  overflow: hidden;
+}
+
+/*
+  OLED black: the Dark theme (and System when the device is in dark mode) use pure black instead of grey,
+  so that those pixels are switched off. Cards are a slightly lighter black with a hairline border, so that they stand out.
+*/
+:root .dark,
+:root .system[data-system-theme*='dark'] {
+  --bg-color: #000;
+  --card-bg-color: #111113;
+  --side-nav-color: #000;
+  --side-nav-hover-color: #1c1c1e;
+  --side-nav-active-color: #2c2c2e;
+  --search-bar-color: #1c1c1e;
+  --scrollbar-color: #3a3a3c;
+  --scrollbar-color-hover: #48484a;
+  --secondary-card-bg-color: rgb(0 0 0 / 80%);
+}
+
+/* The menus of the icon buttons are action sheets (see FtIconButton.vue) */
+.prompt:has(> .promptCard.iosActionSheet) {
+  justify-content: flex-end;
+  backdrop-filter: none;
+}
+
+.prompt .promptCard.iosActionSheet {
+  inline-size: 100%;
+  max-inline-size: 500px;
+  padding-block: 6px 8px;
+  padding-inline: 0;
+  border-radius: 30px !important;
+  background-color: var(--ios-menu-bg) !important;
+  backdrop-filter: blur(30px) saturate(160%);
+  transform-origin: bottom center;
+  animation: ios-sheet-in 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+@keyframes ios-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(40px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.prompt .promptCard.iosActionSheet h2 {
+  margin-block: 10px 6px;
+  padding-inline: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ios-menu-secondary-text);
+  letter-spacing: 0.02em;
+}
+
+.prompt .promptCard.iosActionSheet .listItem {
+  padding-block: 14px !important;
+  padding-inline: 20px !important;
+  text-align: center;
+  font-size: 17px;
+  justify-content: center;
+}
+
+.prompt .promptCard.iosActionSheet .listItem:active {
+  background-color: var(--ios-menu-pressed) !important;
+}
+
+.prompt .promptCard.iosActionSheet .listItemDivider {
+  margin-block: 4px !important;
+}
+
+/* ==========================================================================
+   Design system: inspired by Apple's own apps (the TV app) and Liquid Glass.
+   San Francisco type, large bold titles, generous spacing, glass panels with
+   large continuous corners, capsule controls and big rounded artwork.
+   ========================================================================== */
+
+/* Type */
+.app,
+.app button,
+.app input,
+.app select,
+.app textarea,
+.btn,
+.toast {
+  font-family: var(--ios-font) !important;
+  -webkit-font-smoothing: antialiased;
+}
+
+.app h1,
+.app h2,
+.app h3 {
+  font-family: var(--ios-display-font);
+  letter-spacing: -0.02em;
+}
+
+/* Panels */
+.app .ft-card {
+  border: 0.5px solid var(--ios-panel-stroke) !important;
+  border-radius: var(--ios-radius-panel) !important;
+  background: var(--ios-panel-fill), var(--card-bg-color) !important;
+  box-shadow: var(--ios-panel-highlight) !important;
+  padding-inline: 20px;
+  padding-block: 8px 20px;
+  box-sizing: border-box;
+  max-inline-size: 100%;
+}
+
+/* The pages are a single column of panels using the whole width */
+.app .routerView .card {
+  inline-size: auto !important;
+  margin-inline: 0 !important;
+}
+
+/* Panels inside panels don't need a second frame */
+.app .ft-card .ft-card {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding-inline: 0;
+  margin-inline: 0;
+}
+
+/* Large titles like in Apple's apps, without the icons */
+.app .ft-card > h2,
+.app .ft-card > .heading > h2,
+.app .ft-card .headingText,
+.app .routerView .card > h2 {
+  font-size: 30px !important;
+  font-weight: 700 !important;
+  line-height: 1.15;
+  margin-block: 14px 16px !important;
+}
+
+.app .ft-card > h2 > svg,
+.app .ft-card > .heading > h2 > svg,
+.app .ft-card .headingText > svg,
+.app .headingIcon,
+.app .ft-card > h2 > .subscriptionIcon {
+  display: none !important;
+}
+
+.app .message {
+  color: var(--ios-secondary-label) !important;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+/* Text fields: filled capsules */
+.app .ft-input {
+  block-size: 44px !important;
+  border-radius: var(--ios-radius-control) !important;
+  background-color: var(--ios-control-fill) !important;
+  color: var(--primary-text-color) !important;
+  font-size: 17px !important;
+  padding-inline: 20px !important;
+}
+
+.app .ft-input::placeholder {
+  color: var(--ios-secondary-label);
+}
+
+/* Pickers: capsules with the label above them */
+.app .select-text {
+  block-size: 44px !important;
+  border-radius: var(--ios-radius-control) !important;
+  background-color: var(--ios-control-fill) !important;
+  padding-inline: 20px 40px !important;
+  font-size: 17px !important;
+}
+
+.app .iconSelect {
+  inset-block-start: 14px !important;
+  inset-inline-end: 18px !important;
+}
+
+.app .select-bar,
+.app .select-highlight {
+  display: none !important;
+}
+
+.app .select-text ~ .select-label {
+  color: var(--ios-secondary-label) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding-inline-start: 4px;
+}
+
+.app .select-label .select-icon {
+  display: none;
+}
+
+/* Buttons: capsules */
+.app .btn {
+  border: 0 !important;
+  border-radius: var(--ios-radius-control) !important;
+  box-shadow: none !important;
+  min-block-size: 44px;
+  padding-inline: 22px !important;
+  font-size: 16px !important;
+  font-weight: 600 !important;
+}
+
+.app .btn.ripple::after {
+  display: none;
+}
+
+.app .btn:active {
+  transform: scale(0.97);
+  filter: brightness(1.15);
+}
+
+/* Round icon buttons: glass discs instead of the bright blue circles */
+.app .iconButton {
+  border: 0.5px solid var(--ios-panel-stroke) !important;
+  background-color: var(--ios-control-fill) !important;
+  color: var(--primary-text-color) !important;
+  box-shadow: none !important;
+  transition: transform 0.15s ease, background-color 0.15s ease !important;
+}
+
+.app .iconButton:active {
+  transform: scale(0.92);
+  background-color: var(--ios-control-fill-pressed) !important;
+}
+
+.app .iconButton.primary,
+.app .iconButton.base-no-default.active {
+  background-color: var(--primary-color) !important;
+  color: var(--text-with-main-color) !important;
+}
+
+/* Switches like iOS */
+.app .switch-label {
+  font-weight: 400 !important;
+  padding-inline-start: 62px !important;
+  min-block-size: 31px;
+}
+
+.app .switch-label::before {
+  inline-size: 51px !important;
+  block-size: 31px !important;
+  border-radius: 999px !important;
+  background-color: var(--ios-control-fill) !important;
+}
+
+.app .switch-input:checked + .switch-label::before {
+  background-color: #34c759 !important;
+}
+
+.app .switch-label::after {
+  inline-size: 27px !important;
+  block-size: 27px !important;
+  inset-inline-start: 2px !important;
+  background-color: #fff !important;
+  box-shadow: 0 3px 8px rgb(0 0 0 / 15%), 0 1px 1px rgb(0 0 0 / 16%) !important;
+}
+
+.app .switch-input:checked + .switch-label::after {
+  background-color: #fff !important;
+  transform: translate(calc(20px * var(--horizontal-directionality-coefficient)), -50%) !important;
+}
+
+.app .switch-input {
+  inline-size: 51px !important;
+  block-size: 31px !important;
+}
+
+/* The tabs of the subscriptions and channels pages: a segmented control */
+.app .tabs,
+.app .trendingInfoTabs {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  gap: 2px;
+  padding: 3px;
+  margin-block: 0 16px !important;
+  border-radius: var(--ios-radius-control);
+  background-color: var(--ios-control-fill);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.app .tabs .tab,
+.app .trendingInfoTabs .tab {
+  flex: 1 1 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-inline-size: max-content;
+  padding-block: 8px !important;
+  padding-inline: 12px !important;
+  border: 0 !important;
+  margin: 0 !important;
+  border-radius: var(--ios-radius-control);
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  color: var(--ios-secondary-label);
+  white-space: nowrap;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.app .tabs .tab .subscriptionIcon,
+.app .trendingInfoTabs .trendingIcon {
+  display: none;
+}
+
+.app .tabs .tab.selectedTab,
+.app .trendingInfoTabs .tab.selectedTab {
+  background-color: rgb(255 255 255 / 16%);
+  color: var(--primary-text-color);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 20%);
+}
+
+:root[data-ios-appearance='light'] .app .tabs .tab.selectedTab,
+:root[data-ios-appearance='light'] .app .trendingInfoTabs .tab.selectedTab {
+  background-color: #fff;
+}
+
+/* Artwork: big continuous corners */
+.app .videoThumbnail,
+.app .videoThumbnail .thumbnailLink,
+.app .videoThumbnail .thumbnailImage,
+.app .playlistThumbnail,
+.app .ft-list-item .thumbnail,
+.app .ft-list-item .thumbnailImage {
+  border-radius: var(--ios-radius-artwork) !important;
+}
+
+.app .videoThumbnail,
+.app .ft-list-item .thumbnail {
+  overflow: hidden;
+}
+
+/* Duration and count badges: small glass capsules */
+.app .videoDuration {
+  border-radius: 8px !important;
+  background-color: rgb(0 0 0 / 55%) !important;
+  backdrop-filter: blur(12px) saturate(160%);
+  color: #fff !important;
+  font-size: 12px !important;
+  font-weight: 600;
+  padding-block: 2px !important;
+  padding-inline: 7px !important;
+  inset-block-end: 8px !important;
+  inset-inline-end: 8px !important;
+}
+
+/* The round buttons over the thumbnails */
+.app .playlistIcons .iconButton {
+  background-color: rgb(0 0 0 / 45%) !important;
+  border-color: rgb(255 255 255 / 18%) !important;
+  backdrop-filter: blur(12px) saturate(160%);
+  color: #fff !important;
+}
+
+/* Video titles and metadata */
+.app .ft-list-item .title {
+  font-weight: 600 !important;
+  letter-spacing: -0.01em;
+  color: var(--primary-text-color) !important;
+}
+
+.app .ft-list-item .infoLine,
+.app .ft-list-item .channelName {
+  color: var(--ios-secondary-label) !important;
+  font-size: 13px;
+}
+
+/* Links in the accent colour, not the default blue */
+.app :any-link:not(.thumbnailLink, .channelName, .title) {
+  color: var(--primary-color);
+}
+
+/* No scrollbars, like native lists */
+.app * {
+  scrollbar-width: none;
+}
+
+/* The video count of playlists: a frosted strip over the artwork */
+.app .videoCountContainer .background {
+  background-color: rgb(0 0 0 / 45%) !important;
+  opacity: 1 !important;
+  backdrop-filter: blur(18px) saturate(160%);
+}
+
+.app .videoCountContainer .inner {
+  color: #fff !important;
+  font-weight: 600;
+}
+
+/* Watch page */
+.app .videoPlayer {
+  overflow: hidden;
+  border-radius: 20px;
+  box-shadow: 0 18px 50px rgb(0 0 0 / 45%);
+}
+
+.app .watchVideoInfo .videoTitle {
+  font-family: var(--ios-display-font);
+  font-size: 22px !important;
+  font-weight: 700 !important;
+  line-height: 1.22;
+  letter-spacing: -0.02em;
+  margin-block: 10px 6px !important;
+}
+
+.app .watchVideoInfo .datePublishedAndViewCount,
+.app .watchVideoInfo .likeCount {
+  color: var(--ios-secondary-label) !important;
+  font-size: 14px;
+}
+
+.app .subscribeButton {
+  font-weight: 700 !important;
+}
+
+.app .getCommentsTitle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 44px;
+  margin-block: 6px;
+  border-radius: var(--ios-radius-control);
+  background-color: var(--ios-control-fill);
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+}
+
+.app .commentsTitle {
+  font-size: 22px !important;
+  font-weight: 700 !important;
+}
+
+.app .videoDescription .description {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+/* No gap under the artwork, so that the progress bar sits on it and follows its corners */
+.app .thumbnailImage {
+  display: block;
+}
+
+.app .watchedProgressBar {
+  block-size: 4px !important;
+}
+
+.app .ft-list-item .channelName,
+.app .ft-list-item .infoLine a {
+  text-decoration: none !important;
+}
+
+/*
+  Settings menu: an inset grouped list like the Settings app.
+  Not display: block !important, the menu is hidden with v-show while a section is open.
+*/
+.app .settingsMenu {
+  display: block;
+  position: static !important;
+  block-size: auto !important;
+  max-block-size: none !important;
+  margin: 0;
+  padding: 0;
+  inline-size: 100% !important;
+  box-sizing: border-box;
+}
+
+.app .settingsMenu .header {
+  font-size: 34px !important;
+  font-weight: 700;
+  margin-block: 12px 16px !important;
+  padding-inline: 4px;
+}
+
+.app .settingsMenu .header .headingIcon {
+  display: none;
+}
+
+.app .settingsMenu .title {
+  inline-size: auto !important;
+  min-block-size: 52px;
+  padding-inline: 14px 16px;
+  border: 0.5px solid var(--ios-panel-stroke);
+  border-block-width: 0;
+  background: var(--ios-panel-fill), var(--card-bg-color);
+  color: var(--primary-text-color) !important;
+  font-size: 17px !important;
+  text-decoration: none;
+  position: relative;
+}
+
+.app .settingsMenu .title:first-of-type {
+  border-block-start-width: 0.5px;
+  border-start-start-radius: 22px;
+  border-start-end-radius: 22px;
+}
+
+.app .settingsMenu .title:last-of-type {
+  border-block-end-width: 0.5px;
+  border-end-start-radius: 22px;
+  border-end-end-radius: 22px;
+}
+
+.app .settingsMenu .title:active {
+  background: var(--ios-control-fill);
+}
+
+/* hairline separators between the rows, starting after the icon */
+.app .settingsMenu .title:not(:last-of-type)::before {
+  content: '';
+  position: absolute;
+  inset-block-end: 0;
+  inset-inline: 58px 0;
+  border-block-end: 0.5px solid var(--ios-menu-separator);
+}
+
+/* chevron */
+.app .settingsMenu .title::after {
+  content: '';
+  margin-inline-start: auto;
+  inline-size: 8px;
+  block-size: 8px;
+  border-block-start: 2px solid var(--ios-tertiary-label);
+  border-inline-end: 2px solid var(--ios-tertiary-label);
+  transform: rotate(45deg);
+}
+
+.app .settingsMenu .titleContent {
+  inline-size: auto;
+}
+
+.app .settingsMenu .titleUnderline {
+  display: none;
+}
+
+.app .settingsMenu .iconAndTitleText {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+}
+
+/* the icons in coloured rounded squares */
+.app .settingsMenu .titleIcon {
+  box-sizing: border-box;
+  inline-size: 30px !important;
+  block-size: 30px !important;
+  padding: 6px;
+  border-radius: 8px;
+  color: #fff;
+  background-color: #8e8e93;
+}
+
+.app .settingsMenu .title[data-section='general'] .titleIcon { background-color: #8e8e93; }
+.app .settingsMenu .title[data-section='theme'] .titleIcon { background-color: #5e5ce6; }
+.app .settingsMenu .title[data-section='player'] .titleIcon { background-color: #ff375f; }
+.app .settingsMenu .title[data-section='subscription'] .titleIcon { background-color: #ff453a; }
+.app .settingsMenu .title[data-section='distraction'] .titleIcon { background-color: #bf5af2; }
+.app .settingsMenu .title[data-section='parental-control'] .titleIcon { background-color: #ff9f0a; }
+.app .settingsMenu .title[data-section='privacy'] .titleIcon { background-color: #0a84ff; }
+.app .settingsMenu .title[data-section='data'] .titleIcon { background-color: #30d158; }
+.app .settingsMenu .title[data-section='sponsor-block'] .titleIcon { background-color: #64d2ff; }
+.app .settingsMenu .title[data-section='password'] .titleIcon { background-color: #636366; }
+
+.app .settingsPage {
+  align-items: stretch;
+}
+
+.app .settingsPage .settingsSections {
+  inline-size: 100%;
+}
+
+/* The settings sections are panels too */
+.app .settingsSection {
+  border: 0.5px solid var(--ios-panel-stroke);
+  border-radius: var(--ios-radius-panel);
+  background: var(--ios-panel-fill), var(--card-bg-color) !important;
+  box-shadow: var(--ios-panel-highlight);
+  overflow: hidden;
+}
+
+.app .settingsSection .sectionTitle {
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  letter-spacing: -0.02em;
+}
+
+.app .settingsSection .select {
+  inline-size: 100%;
+}
+
+.app .settingsSection .switch-ctn {
+  margin-block: 6px;
+  margin-inline: 0;
+}
+
+.app .trendingInfoTabs .tab {
+  flex-direction: row !important;
+}
+
+/* Watched videos: just dimmed, with the label as a small glass capsule */
+.app .ft-list-item.watched {
+  background-color: transparent !important;
+}
+
+.app .ft-list-item.watched .thumbnailImage {
+  opacity: 0.55;
+}
+
+.app .videoWatched {
+  margin: 8px;
+  padding-block: 2px !important;
+  padding-inline: 8px !important;
+  border-radius: 8px;
+  background-color: rgb(0 0 0 / 55%) !important;
+  backdrop-filter: blur(12px) saturate(160%);
+  color: #fff !important;
+  opacity: 1 !important;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* The subscribe button: a capsule (with the profile toggle as its trailing part) */
+.app .ftSubscribeButton .buttonList {
+  overflow: hidden;
+  border-radius: var(--ios-radius-control) !important;
+  box-shadow: none !important;
+}
+
+.app .ftSubscribeButton .buttonList .btn {
+  margin: 0;
+  border-radius: 0 !important;
+}
+
+/* the fade behind "...more" in the colour of the glass panel */
+.app .videoDescription.short .descriptionStatus {
+  background: linear-gradient(270deg, #1d1d1f 72%, transparent 100%) !important;
+}
+
+:root[data-ios-appearance='light'] .app .videoDescription.short .descriptionStatus {
+  background: linear-gradient(270deg, #fff 72%, transparent 100%) !important;
+}
+
+.app .videoDescription .descriptionStatus {
+  color: var(--primary-color) !important;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   Video player: Liquid Glass controls, like the system's video player
+   ========================================================================== */
+
+.app .shaka-video-container {
+  --shaka-font-family: var(--ios-font);
+  --shaka-font-size: 15px;
+  --shaka-bg-menu: rgb(30 30 32 / 62%);
+  --shaka-thumb-size: 14px;
+  --shaka-track-h: 5px;
+  --shaka-icon-size: 44px;
+}
+
+/* the gradient behind the controls */
+.app .shaka-scrim-container {
+  background: linear-gradient(to top, rgb(0 0 0 / 55%) 0%, rgb(0 0 0 / 0%) 35%, rgb(0 0 0 / 0%) 75%, rgb(0 0 0 / 35%) 100%) !important;
+}
+
+/* the play button in the middle: a glass disc */
+.app .shaka-big-buttons-container button,
+.app .shaka-play-button {
+  border: 0.5px solid rgb(255 255 255 / 25%) !important;
+  border-radius: 50% !important;
+  background-color: rgb(40 40 44 / 40%) !important;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 20%), 0 8px 30px rgb(0 0 0 / 30%) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* the buttons at the bottom: a glass capsule */
+.app .shaka-controls-button-panel {
+  box-sizing: border-box;
+  inline-size: calc(100% - 16px) !important;
+  margin-inline: 8px !important;
+  margin-block-end: 8px !important;
+  padding-inline: 6px !important;
+  min-block-size: 46px;
+  border: 0.5px solid rgb(255 255 255 / 18%);
+  border-radius: 999px;
+  background-color: rgb(30 30 32 / 42%);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 14%), 0 10px 30px rgb(0 0 0 / 25%);
+  backdrop-filter: blur(24px) saturate(180%);
+  align-items: center;
+}
+
+.app .shaka-controls-button-panel > button,
+.app .shaka-controls-button-panel > .shaka-overflow-menu-button {
+  color: #fff !important;
+  border-radius: 50%;
+  transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.app .shaka-controls-button-panel > button:active {
+  transform: scale(0.88);
+  background-color: rgb(255 255 255 / 14%);
+}
+
+.app .shaka-current-time {
+  font-variant-numeric: tabular-nums;
+  font-size: 13px !important;
+  font-weight: 600;
+  color: rgb(255 255 255 / 85%) !important;
+}
+
+/* the seek bar: a rounded track with a white thumb */
+.app .shaka-seek-bar-container {
+  inline-size: calc(100% - 32px) !important;
+  margin-inline: 16px !important;
+  margin-block-end: 6px !important;
+  border-radius: 999px !important;
+  overflow: visible;
+}
+
+.app .shaka-range-element::-webkit-slider-thumb {
+  box-shadow: 0 1px 4px rgb(0 0 0 / 35%);
+}
+
+/* the settings (quality, speed, captions...): a glass panel like the system menus */
+.app .shaka-overflow-menu,
+.app .shaka-settings-menu {
+  min-inline-size: 250px;
+  padding-block: 6px !important;
+  border: 0.5px solid rgb(255 255 255 / 16%);
+  border-radius: 22px !important;
+  background-color: var(--shaka-bg-menu) !important;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%), 0 18px 50px rgb(0 0 0 / 45%) !important;
+  backdrop-filter: blur(30px) saturate(180%);
+
+  /* fits between the top of the player and the controls, and scrolls when the player is small */
+  inset-block: 8px 66px !important;
+  inset-inline-end: 12px !important;
+  block-size: fit-content;
+  max-block-size: calc(100% - 74px) !important;
+  margin-block-start: auto;
+  overflow: hidden auto;
+  overscroll-behavior: contain;
+  transform-origin: bottom right;
+
+  /* a short, soft fade and lift when the menus open and close (shaka-player hides them with display: none) */
+  transition:
+    opacity 0.18s ease-out,
+    transform 0.26s cubic-bezier(0.2, 0.9, 0.3, 1),
+    display 0.26s allow-discrete;
+}
+
+.app .shaka-overflow-menu.shaka-hidden,
+.app .shaka-settings-menu.shaka-hidden {
+  opacity: 0;
+  transform: translateY(6px) scale(0.97);
+}
+
+@starting-style {
+  .app .shaka-overflow-menu,
+  .app .shaka-settings-menu {
+    opacity: 0;
+    transform: translateY(6px) scale(0.97);
+  }
+}
+
+/* a soft press: the row dims and sinks a little, and eases back when released */
+.app .shaka-overflow-menu button,
+.app .shaka-settings-menu button {
+  min-block-size: 34px;
+  padding-block: 0 !important;
+  padding-inline: 12px !important;
+  color: #fff !important;
+  font-size: 13px !important;
+  transition:
+    background-color 0.25s ease-out,
+    transform 0.25s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.app .shaka-overflow-menu button .shaka-ui-icon,
+.app .shaka-settings-menu button .shaka-ui-icon,
+.app .shaka-overflow-menu button i,
+.app .shaka-settings-menu button i {
+  inline-size: 20px;
+  block-size: 20px;
+  font-size: 20px;
+}
+
+.app .shaka-overflow-menu button:active,
+.app .shaka-settings-menu button:active {
+  background-color: rgb(255 255 255 / 14%) !important;
+  transform: scale(0.97);
+  transition-duration: 0.06s;
+}
+
+.app .shaka-overflow-menu .shaka-current-selection-span,
+.app .shaka-settings-menu .shaka-current-selection-span {
+  color: rgb(235 235 245 / 60%) !important;
+  font-size: 12px !important;
+}
+
+/* the header of the sub menus (back arrow and title) */
+.app .shaka-back-to-overflow-button {
+  border-block-end: 0.5px solid rgb(255 255 255 / 12%) !important;
+  margin-block-end: 4px;
+  font-weight: 600 !important;
+}
+
+.app .shaka-chosen-item {
+  color: var(--primary-color) !important;
+}
+
+/* ---------- Fullscreen: the player covers the whole screen, the controls stay clear of the notch ---------- */
+
+.app .fullWindow {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 10000 !important;
+  inline-size: 100vw !important;
+  block-size: 100vh !important;
+  background-color: #000;
+}
+
+.app .fullWindow,
+.app .fullWindow .videoPlayer,
+.app .videoPlayer:has(.fullWindow) {
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.app .fullWindow .shaka-controls-container {
+  padding-block: env(safe-area-inset-top) max(env(safe-area-inset-bottom), 6px);
+  padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
+  box-sizing: border-box;
+}
+
+.app .fullWindow .shaka-overflow-menu,
+.app .fullWindow .shaka-settings-menu {
+  inset-inline-end: calc(env(safe-area-inset-right) + 12px) !important;
+  inset-block: calc(env(safe-area-inset-top) + 12px) calc(env(safe-area-inset-bottom) + 76px) !important;
+  max-block-size: calc(100% - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 88px) !important;
+}
+
+/* the title of the video at the top while in fullscreen, clear of the notch and the Dynamic Island */
+.app .fullWindow .playerFullscreenTitleOverlay {
+  display: block !important;
+  box-sizing: border-box;
+  inset-block-start: calc(env(safe-area-inset-top) + 12px) !important;
+  inset-inline: calc(env(safe-area-inset-left) + 20px) calc(env(safe-area-inset-right) + 20px) !important;
+  max-inline-size: none !important;
+  margin: 0;
+  padding: 0 !important;
+  background: none !important;
+  font-family: var(--ios-display-font);
+  font-size: 17px !important;
+  font-weight: 600 !important;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 8px rgb(0 0 0 / 60%);
+}
+
+/* a soft shade behind it */
+.app .fullWindow .shaka-scrim-container {
+  background: linear-gradient(to bottom, rgb(0 0 0 / 50%) 0%, rgb(0 0 0 / 0%) 22%, rgb(0 0 0 / 0%) 65%, rgb(0 0 0 / 60%) 100%) !important;
+}
+
+/* Never show white while the screen rotates */
+html,
+body {
+  background-color: var(--bg-color, #000);
+  overflow-x: hidden;
+}
+
+html:has(.playerFullWindow),
+.playerFullWindow {
+  background-color: #000 !important;
+}
+
+/* ---------- Watch page: a larger player and more compact details ---------- */
+
+@media only screen and (width <= 680px) {
+  /* the player uses the whole width of the screen, like YouTube's app */
+  .app .videoLayout {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+
+  .app .videoArea .videoPlayer {
+    box-sizing: border-box;
+    inline-size: 100vw;
+    max-inline-size: none !important;
+    margin-inline: calc(50% - 50vw) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* a little taller than 16:9, so that the settings menu has room before going fullscreen */
+  .app .videoArea .ftVideoPlayer:not(.fullWindow) {
+    min-block-size: 76vw;
+    align-items: center;
+  }
+
+  .app .videoArea .videoAreaMargin {
+    margin-block-end: 10px !important;
+  }
+
+  .app .watchVideoInfo {
+    gap: 6px !important;
+    padding-block: 12px 14px !important;
+  }
+
+  .app .watchVideoInfo .videoTitle {
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    line-height: 1.22;
+    margin-block: 0 !important;
+  }
+
+  .app .watchVideoInfo .datePublishedAndViewCount,
+  .app .watchVideoInfo .likeCount {
+    font-size: 13px !important;
+  }
+
+  .app .watchVideoInfo .channelThumbnail {
+    inline-size: 34px !important;
+    block-size: 34px !important;
+    margin-inline-end: 0 !important;
+  }
+
+  .app .watchVideoInfo .subscribeButton {
+    min-block-size: 32px !important;
+    padding-inline: 14px !important;
+    font-size: 13px !important;
+  }
+
+  .app .watchVideoInfo .iconButton {
+    padding: 7px !important;
+    font-size: 16px !important;
+  }
+
+  /* the title, the date and the channel use less height */
+  .app .videoArea .watchVideoInfo {
+    padding-block: 10px 12px !important;
+    padding-inline: 14px !important;
+    gap: 2px !important;
+  }
+
+  .app .watchVideoInfo .videoMetrics {
+    margin: 0;
+    gap: 6px;
+  }
+
+  .app .watchVideoInfo .datePublishedAndViewCount {
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    column-gap: 6px;
+  }
+
+  .app .watchVideoInfo .datePublishedAndViewCount .seperator {
+    display: none !important;
+  }
+
+  .app .watchVideoInfo .likeSection {
+    margin-block-start: 0;
+    white-space: nowrap;
+  }
+
+  .app .watchVideoInfo .videoButtons {
+    margin-block-start: 4px !important;
+    gap: 8px;
+    inline-size: 100%;
+  }
+
+  /* the channel, its name and Subscribe in a single line */
+  .app .watchVideoInfo .profileRow {
+    inline-size: 100%;
+    gap: 8px;
+  }
+
+  .app .watchVideoInfo .profileRow > div:last-child {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    min-inline-size: 0;
+  }
+
+  .app .watchVideoInfo .channelName {
+    inset-block-start: 0;
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .app .watchVideoInfo .profileRow > div:last-child > div:first-child {
+    min-inline-size: 0;
+    flex: 1;
+  }
+
+  .app .watchVideoInfo .videoOptions {
+    inline-size: 100%;
+    justify-content: space-between;
+  }
+
+  /* panels below the player (description, comments, recommendations) are tighter */
+  .app .videoArea .ft-card,
+  .app .watchVideoRecommendations.ft-card,
+  .app .watchVideoRecommendations .ft-card {
+    padding-block: 6px 12px;
+  }
+
+  /* chapters, description and comments take less room */
+  .app .videoChapters {
+    padding-block: 2px !important;
+  }
+
+  .app .videoChapters .chaptersSummary {
+    padding-block: 8px;
+  }
+
+  .app .videoChapters .chaptersTitle {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .app .videoDescription {
+    padding-block: 10px !important;
+  }
+
+  .app .videoDescription .description {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+
+  .app .videoDescription.short .description {
+    max-block-size: 3lh;
+  }
+
+  .app .ft-card:has(> .getCommentsTitle) {
+    padding-block: 8px !important;
+    padding-inline: 8px !important;
+  }
+
+  .app .getCommentsTitle {
+    box-sizing: border-box;
+    min-block-size: 36px;
+    margin: 0 !important;
+    padding-block: 0 !important;
+    line-height: 1.2;
+    font-size: 14px !important;
+  }
+
+  .app .videoArea .videoAreaMargin,
+  .app .watchVideoRecommendations,
+  .app .watchVideoSidebar,
+  .app .infoArea > * {
+    margin-block-end: 8px !important;
+  }
+}
+
+/* Videos in a playlist: the number, then a large artwork with the details below it, like the other lists */
+@media only screen and (width <= 680px) {
+  .playlistPage .playlistItem {
+    grid-template-columns: 24px 1fr !important;
+    align-items: start !important;
+    column-gap: 4px !important;
+    padding-block: 6px;
+  }
+
+  .playlistPage .playlistItem .ft-list-item.list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .playlistPage .playlistItem .ft-list-item.list .videoThumbnail,
+  .playlistPage .playlistItem .ft-list-item.list .thumbnailLink,
+  .playlistPage .playlistItem .ft-list-item.list .thumbnailImage {
+    inline-size: 100% !important;
+    max-inline-size: none !important;
+  }
+
+  .playlistPage .playlistItem .ft-list-item .title {
+    font-size: 17px !important;
+    line-height: 1.3;
+  }
+}
+
+/* the line between the playlist description and its buttons */
+.playlistInfo hr {
+  border: 0;
+  border-block-start: 0.5px solid var(--ios-panel-stroke);
+}
+
+/* ---------- Mini player: the video keeps playing after leaving the watch page ---------- */
+
+.iosMiniPlayer {
+  position: fixed;
+  inset-inline: 12px;
+  inset-block-end: calc(var(--ios-inset-bottom, 0px) + 4px);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  border: 0.5px solid var(--ios-panel-stroke);
+  border-radius: 22px;
+  background: color-mix(in srgb, var(--card-bg-color) 78%, transparent);
+  backdrop-filter: blur(28px) saturate(1.8);
+  box-shadow: var(--ios-panel-highlight), 0 8px 28px rgb(0 0 0 / 35%);
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(16px) scale(0.98);
+  transition: opacity 0.22s ease-out, transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1), inset-block-end 0.35s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+
+.iosMiniPlayer.iosMiniPlayerActive {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+/* the tab bar is hidden while scrolling down */
+html[data-ios-bar-minimized] .iosMiniPlayer {
+  inset-block-end: calc(env(safe-area-inset-bottom, 0px) + 10px);
+}
+
+.iosMiniPlayerVisible .app .routerView {
+  padding-block-end: 72px;
+}
+
+.iosMiniPlayerVideo {
+  position: relative;
+  flex: none;
+  inline-size: 88px;
+  aspect-ratio: 16 / 9;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #000;
+}
+
+.iosMiniPlayerVideo .ftVideoPlayer {
+  position: absolute !important;
+  inset: 0;
+  inline-size: 100% !important;
+  block-size: 100% !important;
+  min-block-size: 0 !important;
+  max-block-size: none !important;
+  margin: 0 !important;
+  border-radius: 0 !important;
+  aspect-ratio: auto !important;
+  pointer-events: none;
+}
+
+.iosMiniPlayerVideo .ftVideoPlayer video {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.iosMiniPlayerVideo .shaka-controls-container,
+.iosMiniPlayerVideo .shaka-text-container,
+.iosMiniPlayerVideo .stats,
+.iosMiniPlayerVideo .valueChangePopup,
+.iosMiniPlayerVideo .skippedSegmentsWrapper,
+.iosMiniPlayerVideo .offlineWrapper,
+.iosMiniPlayerVideo .shaka-spinner-container {
+  display: none !important;
+}
+
+.iosMiniPlayerInfo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+}
+
+.iosMiniPlayerTitle {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.iosMiniPlayerChannel {
+  overflow: hidden;
+  color: var(--tertiary-text-color);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.iosMiniPlayerButton {
+  display: grid;
+  flex: none;
+  place-items: center;
+  inline-size: 40px;
+  block-size: 40px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+}
+
+.iosMiniPlayerButton:active {
+  background: color-mix(in srgb, currentcolor 14%, transparent);
+}
+
+.iosMiniPlayerButton svg {
+  inline-size: 22px;
+  block-size: 22px;
+  fill: currentcolor;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-width: 2.2;
+}
+
+.iosMiniPlayerButton:last-of-type svg {
+  fill: none;
+  inline-size: 18px;
+  block-size: 18px;
+}
+
+.iosMiniPlayerProgress {
+  position: absolute;
+  inset-inline: 14px;
+  inset-block-end: 0;
+  block-size: 2px;
+  border-radius: 1px;
+  background: var(--primary-color);
+  transform-origin: left center;
+}

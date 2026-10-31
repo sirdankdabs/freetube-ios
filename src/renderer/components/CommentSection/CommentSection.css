@@ -1,0 +1,54 @@
+.card {
+  padding-block: 0;
+  padding-inline: 16px;
+}
+
+.getCommentsTitle,
+.commentsTitle,
+.getMoreComments {
+  margin: 0;
+}
+
+.getCommentsTitle {
+  padding-block: 8px;
+  text-align: center;
+  text-decoration: underline;
+  cursor: pointer;
+  color: var(--title-color);
+}
+
+.noCommentMsg {
+  padding-block: 1em;
+  text-align: center;
+}
+
+.commentsTitle {
+  padding-block: 1em;
+  display: inline-block;
+}
+
+.commentSort {
+  float: inline-end;
+}
+
+@media only screen and (width <= 1000px) {
+  .commentSort {
+    float: none;
+    margin-block: 15px;
+  }
+}
+
+.hideComments {
+  font-size: 13px;
+  text-decoration: underline;
+  cursor: pointer;
+  color: var(--title-color);
+}
+
+.getMoreComments {
+  padding-block-end: 1em;
+  text-align: center;
+  text-decoration: underline;
+  cursor: pointer;
+  color: var(--title-color);
+}
