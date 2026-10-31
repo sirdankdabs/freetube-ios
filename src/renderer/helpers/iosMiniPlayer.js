@@ -67,15 +67,33 @@ export function startIOSMiniPlayer(handle, info) {
 
   container.classList.remove('fullWindow')
   container.classList.add('iosMiniVideo')
-  host.appendChild(container)
+
+  // moving the video element with appendChild pauses it, so resume it in the same tick (before it is rendered as paused)
+  const resumeOnPause = () => { video.play().catch(() => {}) }
+  if (wasPlaying) {
+    video.addEventListener('pause', resumeOnPause)
+  }
+
+  // moveBefore moves the element without resetting its state (the playback keeps going)
+  let moved = false
+  if (typeof host.moveBefore === 'function' && container.isConnected) {
+    try {
+      host.moveBefore(container, null)
+      moved = true
+    } catch {}
+  }
+  if (!moved) {
+    host.appendChild(container)
+  }
 
   Object.assign(iosMiniPlayerState, info, { active: true, playing: wasPlaying })
   updateProgress()
 
-  // moving the video element can interrupt it
   if (wasPlaying && video.paused) {
     video.play().catch(() => {})
   }
+
+  setTimeout(() => video.removeEventListener('pause', resumeOnPause), 1000)
 }
 
 export function toggleIOSMiniPlayer() {

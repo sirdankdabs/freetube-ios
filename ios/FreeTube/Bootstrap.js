@@ -229,6 +229,14 @@
         return
       }
       switch (event) {
+        case 'willResignActive':
+          // picture in picture when leaving the app while the video plays
+          if (!activeMedia.paused && !activeMedia.ended && !document.pictureInPictureElement) {
+            try {
+              activeMedia.webkitSetPresentationMode?.('picture-in-picture')
+            } catch {}
+          }
+          break
         case 'didEnterBackground':
           appInBackground = true
           if (activeMedia.paused && !userPaused && !activeMedia.ended) {
@@ -278,6 +286,11 @@
     setHandler('pause', () => {
       userPaused = true
       activeMedia?.pause()
+    })
+    setHandler('enterpictureinpicture', () => {
+      try {
+        activeMedia?.webkitSetPresentationMode?.('picture-in-picture')
+      } catch {}
     })
     setHandler('seekbackward', (details) => {
       if (activeMedia) {

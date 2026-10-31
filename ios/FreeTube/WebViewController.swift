@@ -150,6 +150,10 @@ final class WebViewController: UIViewController {
     webView.scrollView.backgroundColor = .clear
     webView.scrollView.contentInsetAdjustmentBehavior = .never
     webView.scrollView.keyboardDismissMode = .interactive
+    // Pull down at the top: refreshes the feed, or leaves the video (it keeps playing in the mini player)
+    let refreshControl = UIRefreshControl()
+    refreshControl.addTarget(self, action: #selector(pullToRefresh(_:)), for: .valueChanged)
+    webView.scrollView.refreshControl = refreshControl
     #if DEBUG
     webView.isInspectable = true
     #endif
@@ -245,6 +249,7 @@ final class WebViewController: UIViewController {
     NotificationCenter.default.addObserver(self, selector: #selector(deviceOrientationDidChange), name: UIDevice.orientationDidChangeNotification, object: nil)
     // WebKit decides whether media may keep playing at the moment the app goes to the background, see BackgroundPlayback
     let notifications: [(Notification.Name, String)] = [
+      (UIApplication.willResignActiveNotification, "willResignActive"),
       (UIApplication.didEnterBackgroundNotification, "didEnterBackground"),
       (UIApplication.didBecomeActiveNotification, "didBecomeActive"),
     ]
@@ -256,6 +261,21 @@ final class WebViewController: UIViewController {
       }
     }
     webView.load(URLRequest(url: URL(string: "\(AppSchemeHandler.origin)/index.html")!))
+  }
+
+  @objc private func pullToRefresh(_ sender: UIRefreshControl) {
+    Task { @MainActor in
+      let onWatchPage = (try? await webView.evaluateJavaScript("location.hash.startsWith('#/watch/')")) as? Bool ?? false
+      if onWatchPage {
+        if webView.canGoBack {
+          webView.goBack()
+        }
+      } else {
+        _ = try? await webView.evaluateJavaScript("document.querySelector('.floatingRefreshSection .refreshButton:not([disabled])')?.click()")
+      }
+      try? await Task.sleep(for: .milliseconds(700))
+      sender.endRefreshing()
+    }
   }
 
   override func viewDidLayoutSubviews() {

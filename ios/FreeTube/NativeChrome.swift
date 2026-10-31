@@ -531,7 +531,7 @@ final class NativeChrome: UIView {
     let labels = state.labels
 
     var definitions = [
-      TabDefinition(id: "subscriptions", path: "/subscriptions", title: labels.subscriptions,
+      TabDefinition(id: "subscriptions", path: "/subscriptions", title: "Me",
                     symbol: "rectangle.stack.badge.play", selectedSymbol: "rectangle.stack.badge.play.fill"),
     ]
     if state.showTrending {
@@ -730,16 +730,16 @@ final class NativeChrome: UIView {
   private static func profileImage(for profile: ChromeState.Profile, diameter: CGFloat) -> UIImage {
     let background = UIColor(cssColor: profile.bgColor) ?? .systemGray
     let foreground = UIColor(cssColor: profile.textColor) ?? .white
-    let initial = String(profile.name.trimmingCharacters(in: .whitespaces).prefix(1)).uppercased()
     let size = CGSize(width: diameter, height: diameter)
+    let symbolConfiguration = UIImage.SymbolConfiguration(pointSize: diameter * 0.55, weight: .semibold)
+    let symbol = UIImage(systemName: "person.fill", withConfiguration: symbolConfiguration)?.withTintColor(foreground, renderingMode: .alwaysOriginal)
 
     return UIGraphicsImageRenderer(size: size).image { _ in
       background.setFill()
       UIBezierPath(ovalIn: CGRect(origin: .zero, size: size)).fill()
-      let font = UIFont.systemFont(ofSize: diameter * 0.5, weight: .semibold)
-      let attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: foreground]
-      let textSize = initial.size(withAttributes: attributes)
-      initial.draw(at: CGPoint(x: (size.width - textSize.width) / 2, y: (size.height - textSize.height) / 2), withAttributes: attributes)
+      if let symbol {
+        symbol.draw(at: CGPoint(x: (size.width - symbol.size.width) / 2, y: (size.height - symbol.size.height) / 2))
+      }
     }.withRenderingMode(.alwaysOriginal)
   }
 
