@@ -67,8 +67,8 @@ importers:
         specifier: ^2.0.0-alpha.1
         version: 2.0.0-alpha.1(vue@3.5.44)
       vue-router:
-        specifier: ^5.4.0
-        version: 5.4.0(@vue/compiler-sfc@3.5.44)(vue@3.5.44)(webpack@5.112.0)
+        specifier: ^5.5.0
+        version: 5.5.0(@vue/compiler-sfc@3.5.44)(vue@3.5.44)(webpack@5.112.0)
       vuex:
         specifier: ^4.1.0
         version: 4.1.0(vue@3.5.44)
@@ -4275,8 +4275,8 @@ packages:
     peerDependencies:
       vue: ^3.0.0
 
-  vue-router@5.4.0:
-    resolution: {integrity: sha512-pFvcYcxinDHjZUlf7AzFBrT8r8Xqvv4uMHoJnjc+EqPawXQvHTkF8S4tfSmQLpriVHUGfkaKlI7Et0KRjTMTdw==}
+  vue-router@5.5.0:
+    resolution: {integrity: sha512-nYhG+YzLcrO5Z7KbH1H/xvBeBzhCWhQG0z5DYNLuaJULhavZBmEgoQ5xVHGxwe65c5hnJQHZpBxWdQhnOBzHmw==}
     peerDependencies:
       '@pinia/colada': '>=0.21.2'
       '@vue/compiler-sfc': ^3.5.34 || ^4.0.0
@@ -8868,7 +8868,7 @@ snapshots:
     dependencies:
       vue: 3.5.44(typescript@6.0.3)
 
-  vue-router@5.4.0(@vue/compiler-sfc@3.5.44)(vue@3.5.44)(webpack@5.112.0):
+  vue-router@5.5.0(@vue/compiler-sfc@3.5.44)(vue@3.5.44)(webpack@5.112.0):
     dependencies:
       '@vue-macros/common': 3.1.4(vue@3.5.44)
       '@vue/devtools-api': 8.2.1
